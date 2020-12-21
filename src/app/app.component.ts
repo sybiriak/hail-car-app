@@ -82,6 +82,6 @@ export class AppComponent {
 
   getReuslt() {
     const formValue = this.formGroup.value;
-    this.result = +this.lot.bnp + +formValue.averageDelivery + +formValue.averagePortFee + +formValue.auctionFee + +formValue.customsClearance;
+    this.result = +this.carPrice + +formValue.averageDelivery + +formValue.averagePortFee + +formValue.auctionFee + +formValue.customsClearance;
   }
 }
