@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { fuelType } from './app.mock';
 import { AppService } from './app.service';
 import { SnackBarService } from './shared/snack-bar.service';
+import { skip } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +14,8 @@ import { SnackBarService } from './shared/snack-bar.service';
 export class AppComponent {
   private averageDelivery: number = 1650;
   private averagePortFee: number = 1000;
-  private averageMyFee: number = 800;
+  private averageMyFee: number = 300;
+  private carPrice: number = 0;
 
   formGroup: FormGroup;
   lot: any = null;
@@ -26,12 +28,19 @@ export class AppComponent {
     private snackBarService: SnackBarService
   ) {
     this.formGroup = this.formBuilder.group({
-      lotNumber: 46164150,
+      lotNumber: null,
+      carPrice: null,
       averageDelivery: this.averageDelivery,
       averagePortFee: this.averagePortFee,
       auctionFee: null,
       myFee: this.averageMyFee,
       customsClearance: null,
+    });
+
+    this.formGroup.controls.carPrice.valueChanges.pipe(skip(1)).subscribe((price: string) => {
+      this.carPrice = price ? +price : 0;
+      this.updateAuctionFee();
+      this.cdr.detectChanges();
     });
   }
 
@@ -50,14 +59,24 @@ export class AppComponent {
     this.appService.getLotDetails(lot).subscribe((res: any) => {
       this.lot = res.data.lotDetails;
       this.updateData();
-      this.cdr.detectChanges();
     }, (err) => {
       this.snackBarService.openSnackBar(err.message);
     })
   }
 
+  updateCarPrice() {
+    this.carPrice = this.lot.bnp || this.lot.hb;
+  }
+
   updateData() {
-    const auctionFee = this.appService.getAuctionFee(this.lot.bnp);
+    this.updateCarPrice();
+    this.updateAuctionFee();
+    this.formGroup.controls.carPrice.patchValue(this.carPrice);
+    this.cdr.detectChanges();
+  }
+
+  updateAuctionFee() {
+    const auctionFee = this.appService.getAuctionFee(this.carPrice);
     this.formGroup.controls.auctionFee.patchValue(auctionFee);
   }
 
